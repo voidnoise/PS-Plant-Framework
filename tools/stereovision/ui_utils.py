@@ -89,6 +89,7 @@ def calibrate_folder(args):
         square_size: Size of chessboard squares in cm
         output_folder: Folder to write calibration to
     """
+    print('calibrate_folder', args)
     height, width = cv2.imread(args.input_files[0]).shape[:2]
     calibrator = StereoCalibrator(args.rows, args.columns, args.square_size,
                                   (width, height))
@@ -143,6 +144,7 @@ class BMTuner(object):
         """
         Initialize trackbars by discovering ``block_matcher``'s parameters.
         """
+        print(self.block_matcher.parameter_maxima.keys())
         for parameter in self.block_matcher.parameter_maxima.keys():
             maximum = self.block_matcher.parameter_maxima[parameter]
             if not maximum:

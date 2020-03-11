@@ -26,7 +26,7 @@ Classes:
 '''
 
 import numpy as np
-
+import cv2
 
 class PointCloud(object):
 
@@ -55,7 +55,7 @@ end_header
         positions (X, Y, Z) and ``colors`` is made of three-dimensional spectral
         data, e.g. (R, G, B).
         """
-        self.coordinates = coordinates.reshape(-1, 3)
+        self.coordinates = coordinates.reshape(-1, 3) 
         self.colors = colors.reshape(-1, 3)
 
     def write_ply(self, output_file):
@@ -70,5 +70,10 @@ end_header
         """Filter infinite distances from ``PointCloud.``"""
         mask = self.coordinates[:, 2] > self.coordinates[:, 2].min()
         coords = self.coordinates[mask]
+        print(type(self.colors))
+        print(self.colors.shape)
+        print(type(mask))
+        print(mask.shape)
         colors = self.colors[mask]
+
         return PointCloud(coords, colors)

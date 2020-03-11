@@ -3,6 +3,28 @@ import cv2
 import numpy as np
 
 
+def get_camera_properties(cam):
+    public_attr = [name for name in dir(PyCapture2.PROPERTY_TYPE) if not name.startswith('_')]
+
+    if 'UNSPECIFIED_PROPERTY_TYPE' in public_attr:
+        public_attr.remove('UNSPECIFIED_PROPERTY_TYPE')
+        
+    properties = {}
+    for name in public_attr:
+        attr_idx = getattr(PyCapture2.PROPERTY_TYPE, name)
+        value = cam.getProperty(attr_idx)
+        properties[name] = value.absValue
+        print(f'property : {name}, value : {properties[name]}')
+    return properties
+
+
+def set_camera_properties(cam,property_dict):
+    for key in property_dict:
+        attr_idx = getattr(PyCapture2.PROPERTY_TYPE, key)
+        print(f'PROPERT {key} index {attr_idx} value {property_dict[key]}')
+        cam.setProperty(type=attr_idx,absValue=property_dict[key])
+
+
 def print_build_info():
     lib_ver = PyCapture2.getLibraryVersion()
     print('PyCapture2 library version: %d %d %d %d' % (lib_ver[0], lib_ver[1], lib_ver[2], lib_ver[3]))

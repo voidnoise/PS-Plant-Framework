@@ -66,7 +66,7 @@ class StereoPair(object):
 
     def get_frames(self):
         """Get current frames from cameras."""
-        return self.capture.grab_frames(scale=0.3)
+        return self.capture.grab_frames(scale=1.0)
 
 
     def show_frames(self, wait=0):
@@ -144,9 +144,16 @@ class CalibratedPair(StereoPair):
 
     def get_point_cloud(self, pair):
         """Get 3D point cloud from image pair."""
+        print('get_point_cloud')
         disparity = self.block_matcher.get_disparity(pair)
+        cv2.imshow('disparity', disparity)
+        cv2.waitKey()
         points = self.block_matcher.get_3d(disparity,
                                            self.calibration.disp_to_depth_mat)
         colors = cv2.cvtColor(pair[0], cv2.COLOR_BGR2RGB)
+        print('points shape',points.shape)
+        print('colors shape',colors.shape)
+        h,w,d = points.shape
+        colors = cv2.resize(colors,(w,h),interpolation=cv2.INTER_AREA) 
         return PointCloud(points, colors)
 

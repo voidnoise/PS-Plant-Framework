@@ -43,6 +43,10 @@ from stereovision.exceptions import (InvalidSearchRangeError,
                                     InvalidFirstDisparityChangePenaltyError,
                                     InvalidSecondDisparityChangePenaltyError)
 
+STEREO_BM_BASIC_PRESET = 0
+STEREO_BM_NARROW_PRESET = 2
+STEREO_BM_FISH_EYE_PRESET = 1
+
 
 class BlockMatcher(object):
 
@@ -105,6 +109,7 @@ class BlockMatcher(object):
 
     def get_disparity(self, image_pair):
         """Compute disparity map from image pair."""
+        print('Error Not implemented')
         raise NotImplementedError
 
 
@@ -114,7 +119,7 @@ class StereoBM(BlockMatcher):
 
     parameter_maxima = {"search_range": None,
                        "window_size": 255,
-                       "stereo_bm_preset": cv2.STEREO_BM_NARROW_PRESET}
+                       "stereo_bm_preset": STEREO_BM_NARROW_PRESET}
 
     @property
     def search_range(self):
@@ -157,9 +162,9 @@ class StereoBM(BlockMatcher):
     @stereo_bm_preset.setter
     def stereo_bm_preset(self, value):
         """Set private ``_stereo_bm_preset`` and reset ``_block_matcher``."""
-        if value in (cv2.STEREO_BM_BASIC_PRESET,
-                     cv2.STEREO_BM_FISH_EYE_PRESET,
-                     cv2.STEREO_BM_NARROW_PRESET):
+        if value in (STEREO_BM_BASIC_PRESET,
+                     STEREO_BM_FISH_EYE_PRESET,
+                     STEREO_BM_NARROW_PRESET):
             self._bm_preset = value
         else:
             raise InvalidBMPresetError("Stereo BM preset must be defined as "
@@ -172,11 +177,11 @@ class StereoBM(BlockMatcher):
                                           ndisparities=self._search_range,
                                           SADWindowSize=self._window_size)
 
-    def __init__(self, stereo_bm_preset=cv2.STEREO_BM_BASIC_PRESET,
+    def __init__(self, stereo_bm_preset=STEREO_BM_BASIC_PRESET,
                  search_range=80,
                  window_size=21,
                  settings=None):
-        self._bm_preset = cv2.STEREO_BM_BASIC_PRESET
+        self._bm_preset = STEREO_BM_BASIC_PRESET
         self._search_range = 0
         self._window_size = 5
         #: OpenCV camera type for ``_block_matcher``
@@ -194,30 +199,38 @@ class StereoBM(BlockMatcher):
         First, convert images to grayscale if needed. Then pass to the
         ``_block_matcher`` for stereo matching.
         """
+        print('Error Not implemented')
         gray = []
         if pair[0].ndim == 3:
             for side in pair:
                 gray.append(cv2.cvtColor(side, cv2.COLOR_BGR2GRAY))
         else:
             gray = pair
-        return self._block_matcher.compute(gray[0], gray[1],
-                                          disptype=cv2.CV_32F)
+        print(self._block_matcher)
+        try:
+            print('a')
+            res = gray[0].copy()
+            self._block_matcher.compute(gray[0], gray[1], res)
+            print('b')
+        except Error as e:
+            print('compute fail')
+        return res
 
 
 class StereoSGBM(BlockMatcher):
 
     """A semi-global block matcher."""
-
-    parameter_maxima = {"minDisparity": None,
-                       "numDisparities": None,
-                       "SADWindowSize": 11,
-                       "P1": None,
-                       "P2": None,
-                       "disp12MaxDiff": None,
-                       "uniquenessRatio": 15,
-                       "speckleWindowSize": 200,
-                       "speckleRange": 2,
-                       "fullDP": 1}
+    parameter_maxima = {
+                        "minDisparity": None,
+                        "numDisparities": None,
+                        "block_size" : 11,
+                        "P1": None,
+                        "P2": None,
+                        "disp12MaxDiff": None,
+                        "uniquenessRatio": 15,
+                        "speckleWindowSize": 200,
+                        "speckleRange" : 2,
+                        "speckleRange": 2}
 
     @property
     def minDisparity(self):
@@ -247,19 +260,61 @@ class StereoSGBM(BlockMatcher):
         self._replace_bm()
 
     @property
-    def SADWindowSize(self):
+    def block_size(self):
         """Return private ``_sad_window_size`` value."""
-        return self._sad_window_size
+        return self._block_size
 
-    @SADWindowSize.setter
-    def SADWindowSize(self, value):
+    @block_size.setter
+    def block_size(self, value):
         """Set private ``_sad_window_size`` and reset ``_block_matcher``."""
         if value >= 1 and value <= 11 and value % 2:
-            self._sad_window_size = value
+            self._block_size = value
         else:
-            raise InvalidSADWindowSizeError("SADWindowSize must be odd and "
+            raise InvalidSADWindowSizeError("block_size must be odd and "
                                             "between 1 and 11.")
         self._replace_bm()
+
+    @property
+    def P1(self):
+        """Return private ``_P1`` value."""
+        return self._P1
+
+    @P1.setter
+    def P1(self, value):
+        """Set private ``_P1`` and reset ``_block_matcher``."""
+        if value < self.P2:
+            self._P1 = value
+        else:
+            raise InvalidFirstDisparityChangePenaltyError("P1 must be less "
+                                                          "than P2.")
+        self._replace_bm()
+
+    @property
+    def P2(self):
+        """Return private ``_P2`` value."""
+        return self._P2
+
+    @P2.setter
+    def P2(self, value):
+        """Set private ``_P2`` and reset ``_block_matcher``."""
+        if value > self.P1:
+            self._P2 = value
+        else:
+            raise InvalidSecondDisparityChangePenaltyError("P2 must be greater "
+                                                          "than P1.")
+        self._replace_bm()
+
+    @property
+    def disp12MaxDiff(self):
+        """Return private ``_max_disparity`` value."""
+        return self._disp12MaxDiff
+
+    @disp12MaxDiff.setter
+    def disp12MaxDiff(self, value):
+        """Set private ``_max_disparity`` and reset ``_block_matcher``."""
+        self._disp12MaxDiff = value
+        self._replace_bm()
+
 
     @property
     def uniquenessRatio(self):
@@ -306,46 +361,7 @@ class StereoSGBM(BlockMatcher):
             raise InvalidSpeckleRangeError("Speckle range cannot be negative.")
         self._replace_bm()
 
-    @property
-    def disp12MaxDiff(self):
-        """Return private ``_max_disparity`` value."""
-        return self._max_disparity
 
-    @disp12MaxDiff.setter
-    def disp12MaxDiff(self, value):
-        """Set private ``_max_disparity`` and reset ``_block_matcher``."""
-        self._max_disparity = value
-        self._replace_bm()
-
-    @property
-    def P1(self):
-        """Return private ``_P1`` value."""
-        return self._P1
-
-    @P1.setter
-    def P1(self, value):
-        """Set private ``_P1`` and reset ``_block_matcher``."""
-        if value < self.P2:
-            self._P1 = value
-        else:
-            raise InvalidFirstDisparityChangePenaltyError("P1 must be less "
-                                                          "than P2.")
-        self._replace_bm()
-
-    @property
-    def P2(self):
-        """Return private ``_P2`` value."""
-        return self._P2
-
-    @P2.setter
-    def P2(self, value):
-        """Set private ``_P2`` and reset ``_block_matcher``."""
-        if value > self.P1:
-            self._P2 = value
-        else:
-            raise InvalidSecondDisparityChangePenaltyError("P2 must be greater "
-                                                          "than P1.")
-        self._replace_bm()
 
     @property
     def fullDP(self):
@@ -360,48 +376,66 @@ class StereoSGBM(BlockMatcher):
 
     def _replace_bm(self):
         """Replace ``_block_matcher`` with current values."""
-        self._block_matcher = cv2.StereoSGBM(minDisparity=self._min_disparity,
-                        numDisparities=self._num_disp,
-                        SADWindowSize=self._sad_window_size,
-                        uniquenessRatio=self._uniqueness,
-                        speckleWindowSize=self._speckle_window_size,
-                        speckleRange=self._speckle_range,
-                        disp12MaxDiff=self._max_disparity,
-                        P1=self._P1,
-                        P2=self._P2,
-                        fullDP=self._full_dp)
+        # self._block_matcher = cv2.StereoSGBM(minDisparity=self._min_disparity,
+        #                 numDisparities=self._num_disp,
+        #                 SADWindowSize=self._sad_window_size,
+        #                 uniquenessRatio=self._uniqueness,
+        #                 speckleWindowSize=self._speckle_window_size,
+        #                 speckleRange=self._speckle_range,
+        #                 disp12MaxDiff=self._max_disparity,
+        #                 P1=self._P1,
+        #                 P2=self._P2,
+        #                 fullDP=self._full_dp)
+        self._block_matcher = cv2.StereoSGBM_create(
+                        minDisparity = self._min_disparity, #
+                        numDisparities = self._num_disp, #
+                        blockSize = self._block_size, #
+                        P1 = self._P1, #
+                        P2 = self._P2, #
+                        disp12MaxDiff = self._disp12MaxDiff, #
+                        uniquenessRatio = self._uniqueness, #
+                        speckleWindowSize = self._speckle_window_size, #
+                        speckleRange = self._speckle_range #
+                    )
 
-    def __init__(self, min_disparity=16, num_disp=96, sad_window_size=3,
-                 uniqueness=10, speckle_window_size=100, speckle_range=32,
-                 p1=216, p2=864, max_disparity=1, full_dp=False,
-                 settings=None):
+
+
+    def __init__(self, min_disparity=16, num_disp=96, blockSize=3, p1=216, p2=864, 
+                disp12MaxDiff = 1, uniquenessRatio = 10, speckleWindowSize = 100, 
+                speckleRange = 32, settings=None):
         """Instantiate private variables and call superclass initializer."""
         #: Minimum number of disparities. Normally 0, can be adjusted as
         #: needed
         self._min_disparity = min_disparity
         #: Number of disparities
         self._num_disp = num_disp
-        #: Matched block size
-        self._sad_window_size = sad_window_size
-        #: Uniqueness ratio for found matches
-        self._uniqueness = uniqueness
-        #: Maximum size of smooth disparity regions to invalid by noise
-        self._speckle_window_size = speckle_window_size
-        #: Maximum disparity range within connected component
-        self._speckle_range = speckle_range
+        #: block side
+        self._block_size = blockSize
         #: Penalty on disparity change by +-1 between neighbor pixels
         self._P1 = p1
         #: Penalty on disparity change by multiple neighbor pixels
         self._P2 = p2
-        #: Maximum left-right disparity. 0 to disable check
-        self._max_disparity = max_disparity
-        #: Boolean to use full-scale two-pass dynamic algorithm
-        self._full_dp = full_dp
-        #: StereoSGBM whose state is controlled
+        self._disp12MaxDiff = disp12MaxDiff
+        #: Uniqueness ratio for found matches
+        self._uniqueness = uniquenessRatio
+        #: Maximum size of smooth disparity regions to invalid by noise
+        self._speckle_window_size = speckleWindowSize
+        #: Maximum disparity range within connected component
+        self._speckle_range = speckleRange
+
         self._block_matcher = cv2.StereoSGBM()
         super(StereoSGBM, self).__init__(settings)
 
     def get_disparity(self, pair):
         """Compute disparity from image pair (left, right)."""
-        return self._block_matcher.compute(pair[0],
-                                          pair[1]).astype(np.float32) / 16.0
+        
+        imgL = cv2.pyrDown(pair[0])  # downscale images for faster processing
+        imgR = cv2.pyrDown(pair[1])
+        try:
+            res = self._block_matcher.compute(imgL, imgR).astype(np.float32) / 16.0
+        except Error as e:
+            print('ere lies the problem')
+        
+        res = res.astype(np.float32) 
+        res /= 16.0
+        return res 

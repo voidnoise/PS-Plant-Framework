@@ -39,7 +39,9 @@ PROGRAM_DESCRIPTION=(
 "has been taken."
 )
 
-
+"""
+Usuage: python capture_chessboards.py 0 1 100 images --calibration-folder calibration --square-size 2.5
+"""
 def main():
     parser = ArgumentParser(description=PROGRAM_DESCRIPTION,
                            parents=[CHESSBOARD_ARGUMENTS])
@@ -69,8 +71,8 @@ def main():
 
         for i in range(args.num_pictures):
 
-            # Introduces a 5 second delay before the camera pair is scanned for new images
-            enforce_delay(pair, 5)
+            # Introduces a 3 second delay before the camera pair is scanned for new images
+            enforce_delay(pair,0.5)
 
             frames, corners = pair.get_chessboard(args.columns, args.rows, True)
             for side, frame in zip(("left", "right"), frames):
@@ -138,8 +140,8 @@ def enforce_delay(pair, delay):
         text_y = (frames[0].shape[0] + text_size[1]) / 2
 
         for frame, window in zip(frames, pair.windows):
-            cv2.putText(frame, time_remaining, (text_x, text_y), font, font_scale, (255, 50, 50),
-                        line_thickness, line_type)
+            cv2.putText(frame, time_remaining, (int(text_x), int(text_y)), font, font_scale, (255, 50, 50),
+                        int(line_thickness), int(line_type))
             cv2.imshow(window, frame)
 
         cv2.waitKey(1)

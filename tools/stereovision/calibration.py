@@ -165,7 +165,7 @@ class StereoCalibrator(object):
                                   True)
         window_name = "Chessboard"
         cv2.imshow(window_name, temp)
-        if cv2.waitKey(0):
+        if cv2.waitKey(1):
             cv2.destroyWindow(window_name)
 
     def __init__(self, rows, columns, square_size, image_size):
@@ -228,11 +228,11 @@ class StereoCalibrator(object):
          calib.f_mat) = cv2.stereoCalibrate(self.object_points,
                                             self.image_points["left"],
                                             self.image_points["right"],
-                                            self.image_size,
                                             calib.cam_mats["left"],
                                             calib.dist_coefs["left"],
                                             calib.cam_mats["right"],
                                             calib.dist_coefs["right"],
+                                            self.image_size,
                                             calib.rot_mat,
                                             calib.trans_vec,
                                             calib.e_mat,
