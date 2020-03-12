@@ -154,6 +154,6 @@ class CalibratedPair(StereoPair):
         print('points shape',points.shape)
         print('colors shape',colors.shape)
         h,w,d = points.shape
-        colors = cv2.resize(colors,(w,h),interpolation=cv2.INTER_AREA) 
+        colors = cv2.resize(colors,(h,w),interpolation=cv2.INTER_AREA) 
         return PointCloud(points, colors)
 

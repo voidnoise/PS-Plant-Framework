@@ -35,7 +35,9 @@ from stereovision.blockmatchers import StereoBM, StereoSGBM
 from stereovision.calibration import StereoCalibration
 from stereovision.ui_utils import find_files, BMTuner, STEREO_BM_FLAG
 
-
+'''
+usuage : python tune_blockmatcher.py calibration testset --bm_settings bm_settings.txt
+'''
 def main():
     parser = ArgumentParser(description="Read images taken from a calibrated "
                            "stereo pair, compute disparity maps from them and "

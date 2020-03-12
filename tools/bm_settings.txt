@@ -1,0 +1,1 @@
+{"minDisparity": 71, "numDisparities": 240, "block_size": 3, "P1": 368, "P2": 1863, "disp12MaxDiff": 1, "uniquenessRatio": 7, "speckleWindowSize": 100, "speckleRange": 32}
